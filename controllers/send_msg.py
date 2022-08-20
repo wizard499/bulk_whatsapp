@@ -1,11 +1,12 @@
 from flask import Blueprint, render_template
 from flask import request, url_for, redirect
 import pandas as pd
-import pywhatkit
 import sqlite3
-import requests
+from re import fullmatch
 import os
-import pyautogui
+import webbrowser as web
+import pyautogui as pg
+from pyautogui import size
 import time
 import datetime
 import pytz
@@ -15,10 +16,11 @@ UTC = pytz.utc
 IST = pytz.timezone('Asia/Kolkata')
 
 send = Blueprint('send', __name__)
-CURR_TIME =datetime.datetime.now(IST)
-CURR_TIME_STR= CURR_TIME.strftime("%Y-%m-%d %H:%M:%S")
+CURR_TIME = datetime.datetime.now(IST)
+CURR_TIME_STR = CURR_TIME.strftime("%Y-%m-%d %H:%M:%S")
 DAY_PRIOR_TIME = CURR_TIME - datetime.timedelta(days=1)
 DAY_PRIOR_TIME_STR = DAY_PRIOR_TIME.strftime("%Y-%m-%d %H:%M:%S")
+
 
 @send.route('/')
 def index():
@@ -49,7 +51,7 @@ def send_message():
     for receiver in receiver_list:
         phone_number = "+" + str(receiver[1])
         try:
-            pywhatkit.sendwhatmsg_instantly(phone_no=phone_number,
+            sendwhatmsg_instantly(phone_no=phone_number,
                                             message=message,
                                             wait_time=delay)
             success_receiver_list += receiver[1]
@@ -70,6 +72,32 @@ def remove_safely(file_path):
         os.remove(file_path)
     except:
         pass
+
+
+def sendwhatmsg_instantly(
+        phone_no: str,
+        message: str,
+        wait_time: int = 15,
+        tab_close: bool = False,
+        close_time: int = 3,
+) -> None:
+    """Send WhatsApp Message Instantly"""
+
+    if not ("+" in phone_no or "_" in phone_no):
+        raise Exception("Country Code Missing in Phone Number!")
+
+    phone_no = phone_no.replace(" ", "")
+    if not fullmatch(r"^\+?[0-9]{2,4}\s?[0-9]{10}$", phone_no):
+        raise Exception("Invalid Phone Number.")
+
+    web.open(f"https://web.whatsapp.com/send?phone={phone_no}&text='{message}'")
+    time.sleep(4)
+    width, height = pg.size()
+    pg.click(width / 2, height / 2)
+    time.sleep(wait_time - 4)
+    # core.findtextbox()
+    pg.press("enter")
+    # log.log_message(_time=time.localtime(), receiver=phone_no, message=message)
 
 
 @send.route('/upload', methods=['POST'])
