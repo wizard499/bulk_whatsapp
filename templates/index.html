@@ -31,7 +31,7 @@
     <section class="u-clearfix u-section-1" id="sec-2d2c">
       <div class="u-clearfix u-sheet u-sheet-1">
         <div class="u-form u-form-1">
-          <form action="{{ url_for('send.send_message') }}" method="GET" class="u-clearfix u-form-spacing-10 u-form-vertical u-inner-form"  name="form" style="padding: 10px;">
+          <form action="{{ url_for('send.send_message') }}" method="GET" class="u-clearfix u-form-spacing-10 u-form-vertical u-inner-form" id="myForm" name="form" style="padding: 10px;">
             {% if time_taken %}
             <div class="alert alert-warning alert-dismissible fade show" role="alert" style="color: orange;">
               {{"Estimated time for completion: ", time_taken}}
@@ -53,14 +53,21 @@
               <input type="text" value=5 placeholder="5" id="text-55fd" name="delay" class="u-border-1 u-border-grey-30 u-input u-input-rectangle u-white">
             </div>
             <div class="u-align-left u-form-group u-form-submit">
-              <input class="u-btn u-btn-submit u-button-style" type="submit" value="submit" >
+              <input onclick="preventReload()" class="u-btn u-btn-submit u-button-style" type="submit" value="submit" />
+                <script>
+
+   document.getElementById("myForm").onkeypress = function(e) {
+    var key = e.charCode || e.keyCode || 0;
+    if (key == 13) {
+      alert("No Enter!");
+      e.preventDefault();
+    }
+  }
+</script>
             </div>
-            <div class="u-form-send-message u-form-send-success"> Thank you! Your message has been sent. </div>
-            <div class="u-form-send-error u-form-send-message"> Unable to send your message. Please fix errors then try again. </div>
-            <input type="hidden" value="" name="recaptchaResponse">
-          </form>
+            </form>
         </div>
-                <h3 class="u-text u-text-default u-text-1">next in line</h3>
+        <h3 class="u-text u-text-default u-text-1">next in line</h3>
         <h3 class="u-text u-text-default u-text-2">Last sent</h3>
         <div class="u-list u-list-1">
           <div class="u-repeater u-repeater-1">

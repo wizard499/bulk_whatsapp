@@ -4,14 +4,13 @@ import pandas as pd
 import sqlite3
 from re import fullmatch
 import os
-import webbrowser as web
-import pyautogui as pg
-from pyautogui import size
 import time
 import datetime
 import pytz
+from controllers.sender import start
 
 UTC = pytz.utc
+first = True
 
 IST = pytz.timezone('Asia/Kolkata')
 
@@ -38,7 +37,6 @@ def index():
 
 @send.route('/message/send', methods=['GET', 'POST'])
 def send_message():
-    print("arrived here")
     message = request.args.get("message")
     no_of_people = int(request.args.get("no_of_people", 10))
     delay = int(request.args.get("delay", 1))
@@ -47,24 +45,18 @@ def send_message():
     time_taken = delay * no_of_people
     time_taken = time.strftime(
         "%H hr %M min %S seconds", time.gmtime(time_taken))
-    success_receiver_list = []
-    for receiver in receiver_list:
-        phone_number = "+" + str(receiver[1])
-        try:
-            sendwhatmsg_instantly(phone_no=phone_number,
-                                            message=message,
-                                            wait_time=delay)
-            success_receiver_list += receiver[1]
-        except Exception as e:
-            print(e)
-
+    success_receiver_list, failures = start(receiver_list, message)
     if success_receiver_list:
         success_receiver_list = ",".join(["'%s'" % i for i in success_receiver_list])
         conn = get_conn()
         update_last_sent(conn, CURR_TIME_STR, success_receiver_list)
-
+    if failures:
+        failures_str = ",".join(["'%s'" % i for i in failures])
+        conn = get_conn()
+        delete_last_sent(conn, failures_str)
+        failures = "*List of failed contacts*%0a" + "%0a".join(failures)
+        start([("", "8968597121")], failures)
     return redirect(url_for('send.index', time_taken=time_taken))
-    # return render_template('index.html', time_taken=time_taken)
 
 
 def remove_safely(file_path):
@@ -72,32 +64,6 @@ def remove_safely(file_path):
         os.remove(file_path)
     except:
         pass
-
-
-def sendwhatmsg_instantly(
-        phone_no: str,
-        message: str,
-        wait_time: int = 15,
-        tab_close: bool = False,
-        close_time: int = 3,
-) -> None:
-    """Send WhatsApp Message Instantly"""
-
-    if not ("+" in phone_no or "_" in phone_no):
-        raise Exception("Country Code Missing in Phone Number!")
-
-    phone_no = phone_no.replace(" ", "")
-    if not fullmatch(r"^\+?[0-9]{2,4}\s?[0-9]{10}$", phone_no):
-        raise Exception("Invalid Phone Number.")
-
-    web.open(f"https://web.whatsapp.com/send?phone={phone_no}&text='{message}'")
-    time.sleep(4)
-    width, height = pg.size()
-    pg.click(width / 2, height / 2)
-    time.sleep(wait_time - 4)
-    # core.findtextbox()
-    pg.press("enter")
-    # log.log_message(_time=time.localtime(), receiver=phone_no, message=message)
 
 
 @send.route('/upload', methods=['POST'])
@@ -138,6 +104,12 @@ def update_last_sent(conn, curr_time, receiver_list_str):
     conn.commit()
 
 
+def delete_last_sent(conn, failures):
+    update_query = f"delete from contacts where phone in ({failures});"
+    conn.execute(update_query)
+    conn.commit()
+
+
 def get_conn():
     return sqlite3.connect('database.db')
 
@@ -159,5 +131,5 @@ def get_last_sent(limit=10):
     return result
 
 
-def get_lapsed_time(time):
-    return time
+def get_lapsed_time(last_time):
+    return last_time
