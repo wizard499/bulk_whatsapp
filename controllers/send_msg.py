@@ -37,7 +37,7 @@ def index():
 
 @send.route('/message/send', methods=['GET', 'POST'])
 def send_message():
-    message = request.args.get("message")
+    message = request.args.get("message").replace('\n', '%0a')
     no_of_people = int(request.args.get("no_of_people", 10))
     delay = int(request.args.get("delay", 1))
     receiver_list = get_receiver_list(no_of_people)

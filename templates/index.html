@@ -54,16 +54,7 @@
             </div>
             <div class="u-align-left u-form-group u-form-submit">
               <input onclick="preventReload()" class="u-btn u-btn-submit u-button-style" type="submit" value="submit" />
-                <script>
 
-   document.getElementById("myForm").onkeypress = function(e) {
-    var key = e.charCode || e.keyCode || 0;
-    if (key == 13) {
-      alert("No Enter!");
-      e.preventDefault();
-    }
-  }
-</script>
             </div>
             </form>
         </div>
@@ -86,9 +77,9 @@
             {% for contact in sent_contacts %}
 
             <div class="u-container-style u-list-item u-repeater-item">
-              <div class="u-container-layout u-similar-container u-container-layout-9">
-                <p class="u-text u-text-default u-text-19">{{contact.phone}}</p>
-                <p class="u-small-text u-text u-text-default u-text-variant u-text-20">{{contact.name,contact.time_lapsed}}</p>
+              <div class="u-container-layout u-similar-container u-container-layout-1">
+                <p class="u-text u-text-default u-text-3">{{contact.phone}}</p>
+                <p class="u-small-text u-text u-text-default u-text-variant u-text-4">{{contact.name,contact.time_lapsed}}</p>
               </div>
             </div>
             {% endfor %}
